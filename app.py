@@ -837,9 +837,7 @@ st.markdown("""
         <div class="footer-line"></div>
         <div class="footer-sub">Designed & Engineered by</div>
         <div class="footer-names">ANSHIKA & ANJIL</div>
-        <div class="footer-sub" style="opacity: 0.5; margin-top: 15px;">
-            ML Pipeline © 2026 | Visual Intelligence Suite
-        </div>
+        
     </div>
 """, unsafe_allow_html=True)
 

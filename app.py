@@ -800,4 +800,46 @@ elif S.step == 9:
             st.rerun()
 
     st.button("← Back", on_click=prev_step_fn)
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  PREMIUM FOOTER
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+st.markdown("---")
+st.markdown("""
+    <style>
+    .footer-container {
+        text-align: center;
+        padding: 2rem 0;
+        font-family: 'Space Mono', monospace;
+        color: #8890b5;
+    }
+    .footer-line {
+        height: 1px;
+        background: linear-gradient(90deg, transparent, #6c63ff, transparent);
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+    .footer-names {
+        font-weight: 700;
+        letter-spacing: 2px;
+        background: linear-gradient(90deg, #6c63ff, #00d4aa);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-size: 1.2rem;
+    }
+    .footer-sub {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-top: 5px;
+    }
+    </style>
+    <div class="footer-container">
+        <div class="footer-line"></div>
+        <div class="footer-sub">Designed & Engineered by</div>
+        <div class="footer-names">ANSHIKA & ANJIL</div>
+        <div class="footer-sub" style="opacity: 0.5; margin-top: 15px;">
+            ML Pipeline © 2026 | Visual Intelligence Suite
+        </div>
+    </div>
+""", unsafe_allow_html=True)
 

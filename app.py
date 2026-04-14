@@ -351,7 +351,7 @@ def apply_theme(fig):
 #  SESSION STATE INIT
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DEFAULTS = dict(
-    step=0,"fire_pills": False,  # Add this here! problem_type=None,
+    step=0,
     raw_df=None, df=None, target=None, feature_cols=None,
     encoders={}, scaler=None,
     outlier_indices=[], remove_outliers=False,
@@ -362,6 +362,10 @@ DEFAULTS = dict(
     cv_scores=None, trained=False,
     y_pred=None, y_pred_train=None,
     tuning_done=False, best_params=None,
+
+    # ✅ ADD THESE
+    fire_pills=False,
+    last_prediction=None
 )
 for k, v in DEFAULTS.items():
     if k not in st.session_state:
@@ -974,7 +978,7 @@ elif S.step == 9:
     fl, fr = st.columns([1,1])
     with fl: 
         # Using next_step / prev_step to match your helper function names
-        st.button("← Back", on_click=prev_step, use_container_width=True)
+        st.button("← Back", on_click=prev_step_fn, use_container_width=True)
     with fr: 
         if st.button("Restart Pipeline 🔄", use_container_width=True):
             S.last_prediction = None

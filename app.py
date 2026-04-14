@@ -897,27 +897,7 @@ elif S.step == 8:
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 #  STEP 9 — TUNING & LIVE PREDICTION (Fixed Prediction Display)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-elif S.step == 9:
-    section("STEP 10", "⚙️ Tuning & Live Prediction")
-    
-    # Medicine Rain Trigger
-    if S.fire_pills:
-        st.markdown('<div class="med-container">' + ''.join([f'<div class="pill" style="left:{x}%; animation-duration:1s;">💊</div>' for x in range(5,95,10)]) + '</div>', unsafe_allow_html=True)
-        S.fire_pills = False
-    
-    # 1. UNIVERSAL TUNING
-    if st.button("🚀 Optimize Model for Current Dataset", use_container_width=True):
-        with st.spinner("Tuning hyperparameters..."):
-            if S.model_name == "Random Forest":
-                if S.problem_type == "Regression":
-                    S.model = RandomForestRegressor(n_estimators=200, max_depth=10, random_state=42)
-                else:
-                    S.model = RandomForestClassifier(n_estimators=200, max_depth=10, random_state=42)
-            S.model.fit(S.X_train, S.y_train)
-            S.tuning_done = True
-            st.success(f"Model optimized for {len(S.selected_features)} features!")
 
-    st.markdown("---")
     
     # 2. DYNAMIC INPUT GENERATOR (This makes it work for ANY data)
    elif S.step == 9:

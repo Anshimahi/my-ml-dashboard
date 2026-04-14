@@ -435,35 +435,46 @@ def prev_step_fn():
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 #  STEP 0 — PROBLEM TYPE
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  STEP 0 — PROBLEM TYPE (Instant Update Version)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 if S.step == 0:
     with st.container():
         section("STEP 01", "🧩 Define Your Problem")
         col1, col2 = st.columns([1.6, 1])
+        
         with col1:
             st.markdown("#### What type of ML problem are you solving?")
             st.markdown('<span class="tag">Supervised</span> <span class="tag">Binary / Multi-class</span> <span class="tag-yellow">Regression</span>', unsafe_allow_html=True)
             st.markdown("")
+            
+            # Use 'key' to link the radio directly to session state for instant updates
             choice = st.radio(
                 "Select problem type:",
                 ["Classification", "Regression"],
                 horizontal=True,
                 index=0 if S.problem_type != "Regression" else 1,
+                key="problem_selector" 
             )
+            
+            # Sync the choice to our shorthand S.problem_type immediately
+            S.problem_type = choice
+
             if st.button("✅ Confirm & Proceed", key="btn_problem"):
-                S.problem_type = choice
                 next_step_fn()
                 st.rerun()
+
         with col2:
+            # Now this block will re-render every time the radio button is clicked
             icon = "🏷️" if S.problem_type == "Classification" else "📈"
             color = "#6c63ff" if S.problem_type != "Regression" else "#00d4aa"
+            
             st.markdown(f"""
-            <div class="metric-card" style="margin-top:1rem; border-color:{color}; background:rgba(0,0,0,.2)">
+            <div class="metric-card" style="margin-top:1rem; border: 2px solid {color}; background:rgba(0,0,0,.2); transition: all 0.3s ease;">
               <div style="font-size:2.5rem; margin-bottom:.5rem">{icon}</div>
-              <div class="metric-val" style="color:{color}; font-size:1.2rem">{S.problem_type or '—'}</div>
-              <div class="metric-lbl">Selected Type</div>
+              <div class="metric-val" style="color:{color}; font-size:1.2rem">{S.problem_type}</div>
+              <div class="metric-lbl">Current Selection</div>
             </div>""", unsafe_allow_html=True)
-
-
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 #  STEP 1 — DATA INPUT
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

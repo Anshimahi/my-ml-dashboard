@@ -823,7 +823,7 @@ elif S.step == 9:
             90% { opacity: 1; }
             100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
         }
-        .pill:nth-child(1) { left: 5%; animation-duration: 4s; }
+        .pill:nth-child(1) { left: 5%; animation-duration: 2s; }
         .pill:nth-child(2) { left: 15%; animation-duration: 5s; animation-delay: 0.2s; }
         .pill:nth-child(3) { left: 25%; animation-duration: 4.5s; animation-delay: 0.5s; }
         .pill:nth-child(4) { left: 35%; animation-duration: 6s; animation-delay: 0.1s; }

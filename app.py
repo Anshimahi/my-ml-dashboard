@@ -900,8 +900,8 @@ elif S.step == 8:
 
     
     # 2. DYNAMIC INPUT GENERATOR (This makes it work for ANY data)
-   elif S.step == 9:
-        section("STEP 10", "⚙️ Tuning & Universal Prediction")
+elif S.step == 9:
+    section("STEP 10", "⚙️ Tuning & Universal Prediction")
     
     # ── THEMATIC ANIMATION ──
     if S.fire_pills:

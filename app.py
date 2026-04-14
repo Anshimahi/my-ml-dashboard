@@ -795,55 +795,63 @@ elif S.step == 8:
     section("STEP 09", "📊 Performance Metrics & Model Logic")
     
     if S.trained:
-        from sklearn.metrics import r2_score, mean_squared_error
-        import numpy as np
+        # ─── CASE 1: REGRESSION METRICS (Insurance, Housing, etc.) ───
+        if S.problem_type == "Regression":
+            from sklearn.metrics import r2_score, mean_squared_error
+            r2 = r2_score(S.y_test, S.y_pred)
+            mse = mean_squared_error(S.y_test, S.y_pred)
+            rmse = np.sqrt(mse)
+            
+            m_col1, m_col2, m_col3 = st.columns(3)
+            with m_col1:
+                st.markdown(f'<div class="metric-card" style="border-left:5px solid var(--accent2)"><div class="metric-lbl">R² SCORE</div><div class="metric-val" style="color:var(--accent2)">{r2:.4f}</div></div>', unsafe_allow_html=True)
+            with m_col2:
+                st.markdown(f'<div class="metric-card" style="border-left:5px solid #ff4b4b"><div class="metric-lbl">MSE</div><div class="metric-val" style="color:#ff4b4b">{mse:,.0f}</div></div>', unsafe_allow_html=True)
+            with m_col3:
+                st.markdown(f'<div class="metric-card" style="border-left:5px solid #ff9f43"><div class="metric-lbl">RMSE</div><div class="metric-val" style="color:#ff9f43">${rmse:,.2f}</div></div>', unsafe_allow_html=True)
 
-        # 1. Calculations
-        r2 = r2_score(S.y_test, S.y_pred)
-        mse = mean_squared_error(S.y_test, S.y_pred)
-        rmse = np.sqrt(mse)
-        
-        # 2. Metric Cards Row
-        m_col1, m_col2, m_col3 = st.columns(3)
-        with m_col1:
-            st.markdown(f'<div class="metric-card" style="border-left:5px solid var(--accent2)"><div class="metric-lbl">R² SCORE</div><div class="metric-val" style="color:var(--accent2)">{r2:.4f}</div></div>', unsafe_allow_html=True)
-        with m_col2:
-            st.markdown(f'<div class="metric-card" style="border-left:5px solid #ff4b4b"><div class="metric-lbl">MSE</div><div class="metric-val" style="color:#ff4b4b">{mse:,.0f}</div></div>', unsafe_allow_html=True)
-        with m_col3:
-            st.markdown(f'<div class="metric-card" style="border-left:5px solid #ff9f43"><div class="metric-lbl">RMSE</div><div class="metric-val" style="color:#ff9f43">${rmse:,.2f}</div></div>', unsafe_allow_html=True)
+        # ─── CASE 2: CLASSIFICATION METRICS (Iris, Titanic, etc.) ───
+        else:
+            from sklearn.metrics import accuracy_score, precision_score, recall_score
+            acc = accuracy_score(S.y_test, S.y_pred)
+            prec = precision_score(S.y_test, S.y_pred, average='weighted')
+            rec = recall_score(S.y_test, S.y_pred, average='weighted')
+            
+            m_col1, m_col2, m_col3 = st.columns(3)
+            with m_col1:
+                st.markdown(f'<div class="metric-card" style="border-left:5px solid var(--accent1)"><div class="metric-lbl">ACCURACY</div><div class="metric-val" style="color:var(--accent1)">{acc:.2%}</div></div>', unsafe_allow_html=True)
+            with m_col2:
+                st.markdown(f'<div class="metric-card" style="border-left:5px solid var(--accent2)"><div class="metric-lbl">PRECISION</div><div class="metric-val" style="color:var(--accent2)">{prec:.2%}</div></div>', unsafe_allow_html=True)
+            with m_col3:
+                st.markdown(f'<div class="metric-card" style="border-left:5px solid var(--accent4)"><div class="metric-lbl">RECALL</div><div class="metric-val" style="color:var(--accent4)">{rec:.2%}</div></div>', unsafe_allow_html=True)
 
         st.markdown("---")
         
-        # 3. New Feature Importance Section
+        # ─── VISUALIZATIONS (Bottom Row) ───
         col_chart1, col_chart2 = st.columns(2)
         
         with col_chart1:
             st.markdown("#### 🎯 Feature Importance")
-            st.caption("Which variables influenced the AI's decision the most?")
-            
             if hasattr(S.model, 'feature_importances_'):
                 importances = S.model.feature_importances_
                 feat_imp = pd.Series(importances, index=S.selected_features).sort_values(ascending=True)
-                
-                fig_imp = px.bar(
-                    feat_imp, 
-                    orientation='h', 
-                    color_continuous_scale="Viridis",
-                    template="plotly_dark",
-                    labels={'value': 'Importance Score', 'index': 'Feature'}
-                )
+                fig_imp = px.bar(feat_imp, orientation='h', color_continuous_scale="Viridis", template="plotly_dark")
                 fig_imp.update_layout(showlegend=False, height=350, **PLOTLY_LAYOUT)
                 st.plotly_chart(fig_imp, use_container_width=True)
             else:
-                st.info("Feature Importance is most effective with Random Forest models.")
+                st.info("Feature Importance is available for Tree-based models.")
 
         with col_chart2:
-            st.markdown("#### 📈 Actual vs. Predicted")
-            st.caption("Closer to the diagonal line means higher accuracy.")
-            chart_data = pd.DataFrame({'Actual': S.y_test, 'Predicted': S.y_pred})
-            st.scatter_chart(chart_data, x='Actual', y='Predicted', color="#00d4aa")
+            if S.problem_type == "Regression":
+                st.markdown("#### 📈 Actual vs. Predicted")
+                chart_data = pd.DataFrame({'Actual': S.y_test, 'Predicted': S.y_pred})
+                st.scatter_chart(chart_data, x='Actual', y='Predicted', color="#00d4aa")
+            else:
+                st.markdown("#### 📝 Prediction Sample")
+                sample_df = pd.DataFrame({'Actual': S.y_test, 'Predicted': S.y_pred}).head(10)
+                st.dataframe(sample_df, use_container_width=True)
 
-    # 4. FIXED FOOTER BUTTONS
+    # ─── FOOTER BUTTONS ───
     st.markdown("<br>", unsafe_allow_html=True)
     foot_left, foot_right = st.columns([1, 1])
     with foot_left:

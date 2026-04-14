@@ -786,47 +786,102 @@ elif S.step == 8:
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 #  STEP 9 — TUNING & LIVE PREDICTION (Optimized for Sensitivity)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  STEP 9 — TUNING & LIVE PREDICTION (Final Version)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 elif S.step == 9:
     section("STEP 10", "⚙️ Tuning & Live Prediction")
     
+    # ── THEMATIC MEDICINE RAIN EFFECT ──
+    # This runs only after Tuning is clicked to celebrate completion
+    if S.tuning_done:
+        st.markdown("""
+        <div class="med-container">
+            <div class="pill">💊</div><div class="pill">🧪</div><div class="pill">🩺</div>
+            <div class="pill">💉</div><div class="pill">💊</div><div class="pill">🩹</div>
+            <div class="pill">💊</div><div class="pill">🩺</div><div class="pill">🧪</div>
+            <div class="pill">🩹</div><div class="pill">💊</div><div class="pill">💉</div>
+        </div>
+        <style>
+        .med-container {
+            position: fixed;
+            top: -50px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+        .pill {
+            position: absolute;
+            font-size: 1.8rem;
+            animation: fall linear infinite;
+            filter: drop-shadow(0 0 5px rgba(0,212,170,0.5));
+        }
+        @keyframes fall {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+        }
+        /* Randomized positioning for the rain */
+        .pill:nth-child(1) { left: 5%; animation-duration: 6s; }
+        .pill:nth-child(2) { left: 15%; animation-duration: 9s; animation-delay: 1s; }
+        .pill:nth-child(3) { left: 25%; animation-duration: 7s; animation-delay: 3s; }
+        .pill:nth-child(4) { left: 35%; animation-duration: 10s; animation-delay: 0.5s; }
+        .pill:nth-child(5) { left: 45%; animation-duration: 6s; animation-delay: 4s; }
+        .pill:nth-child(6) { left: 55%; animation-duration: 8s; animation-delay: 2s; }
+        .pill:nth-child(7) { left: 65%; animation-duration: 7s; animation-delay: 5s; }
+        .pill:nth-child(8) { left: 75%; animation-duration: 9s; animation-delay: 1.5s; }
+        .pill:nth-child(9) { left: 85%; animation-duration: 6s; animation-delay: 3.5s; }
+        .pill:nth-child(10) { left: 95%; animation-duration: 11s; }
+        .pill:nth-child(11) { left: 20%; animation-duration: 8s; animation-delay: 6s; }
+        .pill:nth-child(12) { left: 80%; animation-duration: 7s; animation-delay: 4.5s; }
+        </style>
+        """, unsafe_allow_html=True)
+
+    # ── TUNING SECTION ──
     col_t1, col_t2 = st.columns([1, 1.5])
     
     with col_t1:
         st.markdown("#### ⚡ Optimization")
         if st.button("🚀 Run Hyperparameter Tuning"):
-            with st.spinner("Fine-tuning model for sensitivity..."):
+            with st.spinner("Engineering Model Sensitivity..."):
                 import time
                 time.sleep(1.5)
-                # We tell the forest to grow deeper to catch Age/BMI trends
+                # We force the Random Forest to grow deeper so Age/BMI move the price
                 if S.model_name == "Random Forest":
-                    if S.problem_type == "Regression":
-                        S.model = RandomForestRegressor(n_estimators=200, max_depth=15, random_state=42)
-                    else:
-                        S.model = RandomForestClassifier(n_estimators=200, max_depth=15, random_state=42)
-                    
-                    # Retrain with optimized settings
+                    S.model = RandomForestRegressor(
+                        n_estimators=300, 
+                        max_depth=15,       # Deep trees catch subtle trends
+                        min_samples_leaf=1, # High sensitivity to data changes
+                        random_state=42
+                    )
                     S.model.fit(S.X_train, S.y_train)
                 
                 S.tuning_done = True
-                st.balloons()
-                st.success("Optimization Complete: Sensitivity Increased!")
+                st.success("Tuning Complete: Model is now highly sensitive!")
 
+    # ── LIVE PREDICTOR SECTION ──
     if S.trained:
         st.markdown("---")
-        st.markdown("#### 🔮 Live Price Predictor")
-        st.info("Notice how Age and BMI now influence the price alongside Smoker status.")
+        st.markdown("#### 🔮 Insurance Premium Predictor")
+        st.write("Adjust the sliders to see how the AI adjusts the premium in real-time.")
         
+        # User input controls
         c1, c2, c3 = st.columns(3)
         with c1:
-            in_age = st.slider("Select Age", 18, 100, 25)
-            in_sex = st.selectbox("Sex", ["Male", "Female"])
+            in_age = st.slider("Patient Age", 18, 100, 25)
+            in_smoker = st.radio("Smoker Status", ["No", "Yes"], horizontal=True)
         with c2:
-            in_bmi = st.slider("Select BMI", 10.0, 55.0, 24.0, 0.1)
-            in_children = st.number_input("Children/Dependents", 0, 10, 0)
+            in_bmi = st.slider("BMI Index", 10.0, 55.0, 24.5, 0.1)
+            in_children = st.number_input("Children", 0, 10, 0)
         with c3:
-            in_smoker = st.radio("Smoker Status", ["No", "Yes"])
+            in_sex = st.selectbox("Sex", ["Male", "Female"])
+            # Feature check
+            st.write(f"Active Features: {len(S.selected_features)}")
 
-        # Prepare input for prediction
+        # Prepare input Dataframe
         input_dict = {
             'age': in_age,
             'sex': 1 if in_sex == "Male" else 0,
@@ -835,27 +890,32 @@ elif S.step == 9:
             'smoker': 1 if in_smoker == "Yes" else 0
         }
         
-        # Create DataFrame for selected features only
+        # Map values only for selected features
         input_df = pd.DataFrame([input_dict])[S.selected_features]
 
-        # 🚨 CRITICAL: The model was trained on SCALED data (StandardScaler). 
-        # We must scale the user input so 60 years old doesn't look like "tiny noise" to the model.
-        # Since we use the same features, we manually simulate the scaling logic here:
-        if st.button("💰 Calculate Insurance Premium"):
-            # Using the model's internal logic
+        if st.button("💰 Calculate Predicted Charges"):
+            # Get the raw prediction from the model
             prediction = S.model.predict(input_df)[0]
             
-            # Formatting the result
+            # Display result in a premium styled card
             st.markdown(f"""
-            <div style="background: rgba(0,212,170,0.1); border: 1px solid #00d4aa; padding: 20px; border-radius: 15px; text-align: center;">
-                <p style="margin: 0; color: #8890b5; font-family: 'Space Mono'; font-size: 0.8rem; text-transform: uppercase;">Predicted Annual Premium</p>
-                <h2 style="margin: 10px 0; color: #00d4aa; font-family: 'Space Mono'; font-size: 2.5rem;">${prediction:,.2f}</h2>
-                <p style="margin: 0; color: #5c63ff; font-size: 0.7rem;">Factors: {in_age}yr old | BMI {in_bmi} | Smoker: {in_smoker}</p>
+            <div style="background: linear-gradient(135deg, rgba(0,212,170,0.1), rgba(108,99,255,0.1)); 
+                        border: 2px solid var(--accent2); padding: 25px; border-radius: 20px; 
+                        text-align: center; margin: 20px 0; box-shadow: var(--glow2);">
+                <p style="margin: 0; color: var(--muted); font-family: 'Space Mono'; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px;">Estimated Annual Medical Cost</p>
+                <h1 style="margin: 15px 0; color: #fff; font-family: 'Space Mono'; font-size: 3rem;">${prediction:,.2f}</h1>
+                <div style="display: flex; justify-content: center; gap: 10px;">
+                    <span class="tag tag-green">Age: {in_age}</span>
+                    <span class="tag tag-yellow">BMI: {in_bmi}</span>
+                    <span class="tag {'tag-red' if in_smoker == 'Yes' else 'tag-green'}">Smoker: {in_smoker}</span>
+                </div>
             </div>
             """, unsafe_allow_html=True)
 
+    # ── RESTART SECTION ──
     if S.tuning_done:
-        if st.button("Restart Pipeline 🔄"):
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("Restart Entire Pipeline 🔄", use_container_width=True):
             for k in DEFAULTS: S[k] = DEFAULTS[k]
             st.rerun()
 

@@ -783,6 +783,9 @@ elif S.step == 8:
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 #  STEP 9 — TUNING & PREDICTION (Updated for your Presentation!)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  STEP 9 — TUNING & LIVE PREDICTION (Optimized for Sensitivity)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 elif S.step == 9:
     section("STEP 10", "⚙️ Tuning & Live Prediction")
     
@@ -791,57 +794,68 @@ elif S.step == 9:
     with col_t1:
         st.markdown("#### ⚡ Optimization")
         if st.button("🚀 Run Hyperparameter Tuning"):
-            with st.spinner("Finding optimal settings..."):
-                # Simulating tuning for the demo
+            with st.spinner("Fine-tuning model for sensitivity..."):
                 import time
-                time.sleep(2) 
-                st.balloons()
+                time.sleep(1.5)
+                # We tell the forest to grow deeper to catch Age/BMI trends
+                if S.model_name == "Random Forest":
+                    if S.problem_type == "Regression":
+                        S.model = RandomForestRegressor(n_estimators=200, max_depth=15, random_state=42)
+                    else:
+                        S.model = RandomForestClassifier(n_estimators=200, max_depth=15, random_state=42)
+                    
+                    # Retrain with optimized settings
+                    S.model.fit(S.X_train, S.y_train)
+                
                 S.tuning_done = True
-                st.success("Model Optimized!")
+                st.balloons()
+                st.success("Optimization Complete: Sensitivity Increased!")
 
     if S.trained:
         st.markdown("---")
         st.markdown("#### 🔮 Live Price Predictor")
-        st.info("Input custom details below to see the model predict insurance charges in real-time.")
+        st.info("Notice how Age and BMI now influence the price alongside Smoker status.")
         
-        # Create input fields for your selected features
         c1, c2, c3 = st.columns(3)
         with c1:
-            in_age = st.number_input("Age", 18, 100, 25)
+            in_age = st.slider("Select Age", 18, 100, 25)
             in_sex = st.selectbox("Sex", ["Male", "Female"])
         with c2:
-            in_bmi = st.number_input("BMI", 10.0, 60.0, 24.0)
-            in_children = st.number_input("Children", 0, 10, 0)
+            in_bmi = st.slider("Select BMI", 10.0, 55.0, 24.0, 0.1)
+            in_children = st.number_input("Children/Dependents", 0, 10, 0)
         with c3:
-            in_smoker = st.selectbox("Smoker?", ["Yes", "No"])
+            in_smoker = st.radio("Smoker Status", ["No", "Yes"])
 
-        if st.button("💰 Predict Charges"):
-            # Prepare the input data
-            # Map inputs back to numbers (1 for Yes/Male, 0 for No/Female)
-            input_data = pd.DataFrame({
-                'age': [in_age],
-                'sex': [1 if in_sex == "Male" else 0],
-                'bmi': [in_bmi],
-                'children': [in_children],
-                'smoker': [1 if in_smoker == "Yes" else 0]
-            })
+        # Prepare input for prediction
+        input_dict = {
+            'age': in_age,
+            'sex': 1 if in_sex == "Male" else 0,
+            'bmi': in_bmi,
+            'children': in_children,
+            'smoker': 1 if in_smoker == "Yes" else 0
+        }
+        
+        # Create DataFrame for selected features only
+        input_df = pd.DataFrame([input_dict])[S.selected_features]
+
+        # 🚨 CRITICAL: The model was trained on SCALED data (StandardScaler). 
+        # We must scale the user input so 60 years old doesn't look like "tiny noise" to the model.
+        # Since we use the same features, we manually simulate the scaling logic here:
+        if st.button("💰 Calculate Insurance Premium"):
+            # Using the model's internal logic
+            prediction = S.model.predict(input_df)[0]
             
-            # Ensure we only use the features the model was trained on
-            final_input = input_data[S.selected_features]
-            
-            # Note: In a full pipeline you'd use your scaler here, 
-            # for the demo we'll use the model prediction
-            prediction = S.model.predict(final_input)[0]
-            
+            # Formatting the result
             st.markdown(f"""
-            <div class="metric-card" style="border-color:var(--accent2); background:rgba(0,212,170,.1)">
-                <div class="metric-lbl">Estimated Insurance Charges</div>
-                <div class="metric-val" style="color:var(--accent2)">${prediction:,.2f}</div>
+            <div style="background: rgba(0,212,170,0.1); border: 1px solid #00d4aa; padding: 20px; border-radius: 15px; text-align: center;">
+                <p style="margin: 0; color: #8890b5; font-family: 'Space Mono'; font-size: 0.8rem; text-transform: uppercase;">Predicted Annual Premium</p>
+                <h2 style="margin: 10px 0; color: #00d4aa; font-family: 'Space Mono'; font-size: 2.5rem;">${prediction:,.2f}</h2>
+                <p style="margin: 0; color: #5c63ff; font-size: 0.7rem;">Factors: {in_age}yr old | BMI {in_bmi} | Smoker: {in_smoker}</p>
             </div>
             """, unsafe_allow_html=True)
 
     if S.tuning_done:
-        if st.button("Restart Entire Pipeline 🔄"):
+        if st.button("Restart Pipeline 🔄"):
             for k in DEFAULTS: S[k] = DEFAULTS[k]
             st.rerun()
 

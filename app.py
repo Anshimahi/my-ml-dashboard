@@ -817,7 +817,7 @@ elif S.step == 8:
         chart_data = pd.DataFrame({'Actual': S.y_test, 'Predicted': S.y_pred})
         st.scatter_chart(chart_data, x='Actual', y='Predicted', color="#00d4aa")
         
-        st.info("💡 **Tip for Presentation:** Point to RMSE. Tell the judges: 'Our model is, on average, within $" + f"{rmse:,.0f}" + " of the actual insurance cost.'")
+        # st.info("💡 **Tip for Presentation:** Point to RMSE. Tell the judges: 'Our model is, on average, within $" + f"{rmse:,.0f}" + " of the actual insurance cost.'")
 
     st.button("← Back", on_click=prev_step_fn)
     st.button("Proceed to Tuning ⚙️", on_click=next_step_fn)

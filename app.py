@@ -768,25 +768,59 @@ elif S.step == 7:
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 #  STEP 8 — PERFORMANCE METRICS
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  STEP 8 — PERFORMANCE METRICS (Advanced Version)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 elif S.step == 8:
     section("STEP 09", "📊 Performance Metrics")
-    if S.problem_type == "Classification":
-        acc = accuracy_score(S.y_test, S.y_pred)
-        metric_cards([("Accuracy", f"{acc:.4f}", "#00d4aa")])
-        tab_cm, tab_rep = st.tabs(["Confusion Matrix", "Report"])
-        with tab_cm:
-            st.plotly_chart(px.imshow(confusion_matrix(S.y_test, S.y_pred), text_auto=True, template="plotly_dark"))
-        with tab_rep:
-            st.text(classification_report(S.y_test, S.y_pred))
-    else:
+    
+    if S.trained:
+        from sklearn.metrics import r2_score, mean_squared_error
+        import numpy as np
+
+        # Calculate all metrics
         r2 = r2_score(S.y_test, S.y_pred)
-        metric_cards([("R² Score", f"{r2:.4f}", "#00d4aa")])
-        st.plotly_chart(px.scatter(x=S.y_test, y=S.y_pred, labels={'x':'Actual','y':'Pred'}, title="Actual vs Pred", template="plotly_dark"))
+        mse = mean_squared_error(S.y_test, S.y_pred)
+        rmse = np.sqrt(mse)
+        
+        # UI Metrics Row
+        m_col1, m_col2, m_col3 = st.columns(3)
+        
+        with m_col1:
+            st.markdown(f"""
+            <div class="metric-card" style="border-left: 5px solid var(--accent2);">
+                <div class="metric-lbl">R² SCORE</div>
+                <div class="metric-val" style="color:var(--accent2)">{r2:.4f}</div>
+                <small style="color:var(--muted)">Accuracy of variance</small>
+            </div>""", unsafe_allow_html=True)
+            
+        with m_col2:
+            st.markdown(f"""
+            <div class="metric-card" style="border-left: 5px solid #ff4b4b;">
+                <div class="metric-lbl">MSE</div>
+                <div class="metric-val" style="color:#ff4b4b">{mse:,.0f}</div>
+                <small style="color:var(--muted)">Mean Squared Error</small>
+            </div>""", unsafe_allow_html=True)
 
-    c1, c2 = st.columns(2)
-    with c1: st.button("← Back", on_click=prev_step_fn)
-    with c2: st.button("▶ Proceed to Tuning", on_click=next_step_fn)
+        with m_col3:
+            st.markdown(f"""
+            <div class="metric-card" style="border-left: 5px solid #ff9f43;">
+                <div class="metric-lbl">RMSE</div>
+                <div class="metric-val" style="color:#ff9f43">${rmse:,.2f}</div>
+                <small style="color:var(--muted)">Avg. Error in Dollars</small>
+            </div>""", unsafe_allow_html=True)
 
+        st.markdown("---")
+        
+        # Visualization: Actual vs Predicted
+        st.markdown("#### 📈 Actual vs. Predicted Analysis")
+        chart_data = pd.DataFrame({'Actual': S.y_test, 'Predicted': S.y_pred})
+        st.scatter_chart(chart_data, x='Actual', y='Predicted', color="#00d4aa")
+        
+        st.info("💡 **Tip for Presentation:** Point to RMSE. Tell the judges: 'Our model is, on average, within $" + f"{rmse:,.0f}" + " of the actual insurance cost.'")
+
+    st.button("← Back", on_click=prev_step_fn)
+    st.button("Proceed to Tuning ⚙️", on_click=next_step_fn)
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 #  STEP 9 — TUNING & COMPLETION

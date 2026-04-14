@@ -905,72 +905,58 @@ elif S.step == 9:
     
     # ── THEMATIC ANIMATION ──
     if S.fire_pills:
-        # Changed "pill" to "✨" for a more universal feel
         st.markdown('<div class="med-container">' + ''.join([f'<div class="pill" style="left:{x}%; animation-duration:1s;">✨</div>' for x in range(5,95,10)]) + '</div>', unsafe_allow_html=True)
         S.fire_pills = False
     
     # ── 1. UNIVERSAL MODEL OPTIMIZATION ──
     if st.button(f"🚀 Optimize {S.model_name} for {S.target}", use_container_width=True):
         with st.spinner("Fine-tuning model architecture..."):
-            # FIX 1: Ensure S.model_name exists in session state before checking
             if S.model_name == "Random Forest":
                 if S.problem_type == "Regression":
                     S.model = RandomForestRegressor(n_estimators=200, max_depth=10, random_state=42)
                 else:
                     S.model = RandomForestClassifier(n_estimators=200, max_depth=10, random_state=42)
             
-            # Re-fit the model
-            S.model.fit(S.X_train, S.y_train)
-            S.tuning_done = True
-            st.success(f"Model successfully optimized for {S.problem_type} task!")
+            if S.X_train is not None:
+                S.model.fit(S.X_train, S.y_train)
+                S.tuning_done = True
+                st.success(f"Model optimized for {S.problem_type} task!")
 
     st.markdown("---")
     
     # ── 2. DYNAMIC INPUT GENERATOR ──
     if S.trained:
         st.markdown(f"#### 🔮 Live Predictor: {S.target}")
-        st.write(f"Adjust inputs to see how the model predicts **{S.target}**.")
         
         user_inputs = {}
         cols = st.columns(3)
         
         for i, col_name in enumerate(S.selected_features):
             with cols[i % 3]:
-                # FIX 2: Check for numeric types correctly using both numpy and pandas dtypes
                 if pd.api.types.is_numeric_dtype(S.raw_df[col_name]):
-                    # We cast to float/int to avoid Streamlit "Value Error" with numpy types
-                    min_val = float(S.raw_df[col_name].min())
-                    max_val = float(S.raw_df[col_name].max())
-                    mean_val = float(S.raw_df[col_name].mean())
-                    
-                    # unique key ensures widgets don't clash during reruns
-                    user_inputs[col_name] = st.slider(f"{col_name}", min_val, max_val, mean_val, key=f"input_{col_name}")
+                    m_val = float(S.raw_df[col_name].min())
+                    mx_val = float(S.raw_df[col_name].max())
+                    avg_val = float(S.raw_df[col_name].mean())
+                    user_inputs[col_name] = st.slider(f"{col_name}", m_val, mx_val, avg_val, key=f"input_{col_name}")
                 else:
                     if col_name in S.encoders:
-                        options = list(S.encoders[col_name].classes_)
-                        val = st.selectbox(f"{col_name}", options, key=f"input_{col_name}")
-                        # Transform to number for the model
+                        opts = list(S.encoders[col_name].classes_)
+                        val = st.selectbox(f"{col_name}", opts, key=f"input_{col_name}")
                         user_inputs[col_name] = S.encoders[col_name].transform([val])[0]
-                    else:
-                        st.error(f"Missing encoder for {col_name}")
 
-        # ── 3. GENERALIZED PREDICTION LOGIC ──
+        # ── 3. PREDICTION LOGIC ──
         if st.button(f"📊 Generate Prediction", use_container_width=True):
-            # FIX 3: Re-order columns to match the EXACT order the model was trained on
-            # Models crash if columns are swapped (e.g., BMI before Age)
             input_df = pd.DataFrame([user_inputs])[S.selected_features]
-            
             res = S.model.predict(input_df)[0]
             S.last_prediction = res
             S.fire_pills = True
             st.rerun()
 
-        # ── 4. DYNAMIC RESULTS DISPLAY ──
+        # ── 4. RESULTS DISPLAY ──
         if S.last_prediction is not None:
             if S.problem_type == "Classification":
                 display_val = S.last_prediction
                 if S.target in S.encoders:
-                    # Inverse transform turns "0" back into "Female" or "No"
                     display_val = S.encoders[S.target].inverse_transform([int(S.last_prediction)])[0]
                 color = "var(--accent1)" 
             else:
@@ -981,20 +967,16 @@ elif S.step == 9:
                 <div class="metric-card" style="border:2px solid {color}; padding:30px;">
                     <div class="metric-lbl">PREDICTED {S.target.upper()}</div>
                     <div class="metric-val" style="font-size:3rem; color:#fff">{display_val}</div>
-                    <div style="font-size:0.7rem; color:var(--muted); margin-top:10px;">
-                        Based on {len(S.selected_features)} processed features
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
+                </div>""", unsafe_allow_html=True)
 
-    # ── 5. GENERALIZED FOOTER ──
+    # ── 5. FOOTER (FIXED NAMES) ──
     st.markdown("<br>", unsafe_allow_html=True)
     fl, fr = st.columns([1,1])
     with fl: 
-        st.button("← Back", on_click=prev_step_fn, use_container_width=True)
+        # Using next_step / prev_step to match your helper function names
+        st.button("← Back", on_click=prev_step, use_container_width=True)
     with fr: 
         if st.button("Restart Pipeline 🔄", use_container_width=True):
-            # FIX 4: Clear the prediction specifically so it doesn't show up on Step 0
             S.last_prediction = None
             for k in DEFAULTS: S[k] = DEFAULTS[k]
             st.rerun()

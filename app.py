@@ -771,57 +771,68 @@ elif S.step == 7:
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 #  STEP 8 — PERFORMANCE METRICS (Advanced Version)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  STEP 8 — PERFORMANCE METRICS (With Feature Importance)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 elif S.step == 8:
-    section("STEP 09", "📊 Performance Metrics")
+    section("STEP 09", "📊 Performance Metrics & Model Logic")
     
     if S.trained:
         from sklearn.metrics import r2_score, mean_squared_error
         import numpy as np
 
-        # Calculate all metrics
+        # 1. Calculations
         r2 = r2_score(S.y_test, S.y_pred)
         mse = mean_squared_error(S.y_test, S.y_pred)
         rmse = np.sqrt(mse)
         
-        # UI Metrics Row
+        # 2. Metric Cards Row
         m_col1, m_col2, m_col3 = st.columns(3)
-        
         with m_col1:
-            st.markdown(f"""
-            <div class="metric-card" style="border-left: 5px solid var(--accent2);">
-                <div class="metric-lbl">R² SCORE</div>
-                <div class="metric-val" style="color:var(--accent2)">{r2:.4f}</div>
-                <small style="color:var(--muted)">Accuracy of variance</small>
-            </div>""", unsafe_allow_html=True)
-            
+            st.markdown(f'<div class="metric-card" style="border-left:5px solid var(--accent2)"><div class="metric-lbl">R² SCORE</div><div class="metric-val" style="color:var(--accent2)">{r2:.4f}</div></div>', unsafe_allow_html=True)
         with m_col2:
-            st.markdown(f"""
-            <div class="metric-card" style="border-left: 5px solid #ff4b4b;">
-                <div class="metric-lbl">MSE</div>
-                <div class="metric-val" style="color:#ff4b4b">{mse:,.0f}</div>
-                <small style="color:var(--muted)">Mean Squared Error</small>
-            </div>""", unsafe_allow_html=True)
-
+            st.markdown(f'<div class="metric-card" style="border-left:5px solid #ff4b4b"><div class="metric-lbl">MSE</div><div class="metric-val" style="color:#ff4b4b">{mse:,.0f}</div></div>', unsafe_allow_html=True)
         with m_col3:
-            st.markdown(f"""
-            <div class="metric-card" style="border-left: 5px solid #ff9f43;">
-                <div class="metric-lbl">RMSE</div>
-                <div class="metric-val" style="color:#ff9f43">${rmse:,.2f}</div>
-                <small style="color:var(--muted)">Avg. Error in Dollars</small>
-            </div>""", unsafe_allow_html=True)
+            st.markdown(f'<div class="metric-card" style="border-left:5px solid #ff9f43"><div class="metric-lbl">RMSE</div><div class="metric-val" style="color:#ff9f43">${rmse:,.2f}</div></div>', unsafe_allow_html=True)
 
         st.markdown("---")
         
-        # Visualization: Actual vs Predicted
-        st.markdown("#### 📈 Actual vs. Predicted Analysis")
-        chart_data = pd.DataFrame({'Actual': S.y_test, 'Predicted': S.y_pred})
-        st.scatter_chart(chart_data, x='Actual', y='Predicted', color="#00d4aa")
+        # 3. New Feature Importance Section
+        col_chart1, col_chart2 = st.columns(2)
         
-        # st.info("💡 **Tip for Presentation:** Point to RMSE. Tell the judges: 'Our model is, on average, within $" + f"{rmse:,.0f}" + " of the actual insurance cost.'")
+        with col_chart1:
+            st.markdown("#### 🎯 Feature Importance")
+            st.caption("Which variables influenced the AI's decision the most?")
+            
+            if hasattr(S.model, 'feature_importances_'):
+                importances = S.model.feature_importances_
+                feat_imp = pd.Series(importances, index=S.selected_features).sort_values(ascending=True)
+                
+                fig_imp = px.bar(
+                    feat_imp, 
+                    orientation='h', 
+                    color_continuous_scale="Viridis",
+                    template="plotly_dark",
+                    labels={'value': 'Importance Score', 'index': 'Feature'}
+                )
+                fig_imp.update_layout(showlegend=False, height=350, **PLOTLY_LAYOUT)
+                st.plotly_chart(fig_imp, use_container_width=True)
+            else:
+                st.info("Feature Importance is most effective with Random Forest models.")
 
-    st.button("← Back", on_click=prev_step_fn)
-    st.button("Proceed to Tuning ⚙️", on_click=next_step_fn)
+        with col_chart2:
+            st.markdown("#### 📈 Actual vs. Predicted")
+            st.caption("Closer to the diagonal line means higher accuracy.")
+            chart_data = pd.DataFrame({'Actual': S.y_test, 'Predicted': S.y_pred})
+            st.scatter_chart(chart_data, x='Actual', y='Predicted', color="#00d4aa")
 
+    # 4. FIXED FOOTER BUTTONS
+    st.markdown("<br>", unsafe_allow_html=True)
+    foot_left, foot_right = st.columns([1, 1])
+    with foot_left:
+        st.button("← Back", on_click=prev_step_fn, use_container_width=True)
+    with foot_right:
+        st.button("Proceed to Tuning ⚙️ →", on_click=next_step_fn, use_container_width=True)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 #  STEP 9 — TUNING & COMPLETION
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

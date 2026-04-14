@@ -795,7 +795,9 @@ elif S.step == 8:
     section("STEP 09", "📊 Performance Metrics & Model Logic")
     
     if S.trained:
-        # ─── CASE 1: REGRESSION METRICS (Insurance, Housing, etc.) ───
+        import numpy as np
+        
+        # ─── 1. CALCULATE METRICS BASED ON PROBLEM TYPE ───
         if S.problem_type == "Regression":
             from sklearn.metrics import r2_score, mean_squared_error
             r2 = r2_score(S.y_test, S.y_pred)
@@ -810,7 +812,6 @@ elif S.step == 8:
             with m_col3:
                 st.markdown(f'<div class="metric-card" style="border-left:5px solid #ff9f43"><div class="metric-lbl">RMSE</div><div class="metric-val" style="color:#ff9f43">${rmse:,.2f}</div></div>', unsafe_allow_html=True)
 
-        # ─── CASE 2: CLASSIFICATION METRICS (Iris, Titanic, etc.) ───
         else:
             from sklearn.metrics import accuracy_score, precision_score, recall_score
             acc = accuracy_score(S.y_test, S.y_pred)
@@ -827,19 +828,37 @@ elif S.step == 8:
 
         st.markdown("---")
         
-        # ─── VISUALIZATIONS (Bottom Row) ───
+        # ─── 2. GENERALIZED FEATURE IMPORTANCE ───
         col_chart1, col_chart2 = st.columns(2)
         
         with col_chart1:
-            st.markdown("#### 🎯 Feature Importance")
+            st.markdown("#### 🎯 Model Interpretability")
+            
+            feat_imp = None
+            method_title = "Feature Importance"
+
+            # Check for Tree-based (Random Forest)
             if hasattr(S.model, 'feature_importances_'):
-                importances = S.model.feature_importances_
-                feat_imp = pd.Series(importances, index=S.selected_features).sort_values(ascending=True)
-                fig_imp = px.bar(feat_imp, orientation='h', color_continuous_scale="Viridis", template="plotly_dark")
+                feat_imp = pd.Series(S.model.feature_importances_, index=S.selected_features)
+                method_title = "Feature Importance (Tree Weights)"
+            
+            # Check for Linear-based (Regression/Logistic)
+            elif hasattr(S.model, 'coef_'):
+                # Handle multi-class coefficients by taking the mean of absolute values
+                if len(S.model.coef_.shape) > 1:
+                    weights = np.mean(np.abs(S.model.coef_), axis=0)
+                else:
+                    weights = np.abs(S.model.coef_)
+                feat_imp = pd.Series(weights, index=S.selected_features)
+                method_title = "Feature Importance (Absolute Coefficients)"
+
+            if feat_imp is not None:
+                feat_imp = feat_imp.sort_values(ascending=True)
+                fig_imp = px.bar(feat_imp, orientation='h', color_continuous_scale="Viridis", template="plotly_dark", title=method_title)
                 fig_imp.update_layout(showlegend=False, height=350, **PLOTLY_LAYOUT)
                 st.plotly_chart(fig_imp, use_container_width=True)
             else:
-                st.info("Feature Importance is available for Tree-based models.")
+                st.info("💡 Interpretability logic for this specific model (e.g., Non-linear SVM) requires advanced methods like SHAP or LIME.")
 
         with col_chart2:
             if S.problem_type == "Regression":
@@ -858,7 +877,6 @@ elif S.step == 8:
         st.button("← Back", on_click=prev_step_fn, use_container_width=True)
     with foot_right:
         st.button("Proceed to Tuning ⚙️ →", on_click=next_step_fn, use_container_width=True)
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 #  STEP 9 — TUNING & COMPLETION
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

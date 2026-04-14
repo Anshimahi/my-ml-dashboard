@@ -792,11 +792,18 @@ elif S.step == 8:
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 #  STEP 9 — TUNING & LIVE PREDICTION (Final Presentation Version)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  STEP 9 — TUNING & LIVE PREDICTION (Final Interactive Version)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 elif S.step == 9:
     section("STEP 10", "⚙️ Tuning & Live Prediction")
     
-    # ── THEMATIC MEDICINE RAIN (One-Time Celebration) ──
-    if S.tuning_done:
+    # Initialize a trigger for the medicine rain if not present
+    if "fire_pills" not in S:
+        S.fire_pills = False
+
+    # ── THEMATIC MEDICINE RAIN (Triggered on Predict) ──
+    if S.fire_pills:
         st.markdown("""
         <div class="med-container">
             <div class="pill">💊</div><div class="pill">🧪</div><div class="pill">🩺</div>
@@ -823,20 +830,20 @@ elif S.step == 9:
             90% { opacity: 1; }
             100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
         }
-        .pill:nth-child(1) { left: 5%; animation-duration: 2s; }
-        .pill:nth-child(2) { left: 15%; animation-duration: 2s; animation-delay: 0.2s; }
-        .pill:nth-child(3) { left: 25%; animation-duration: 2.5s; animation-delay: 0.5s; }
-        .pill:nth-child(4) { left: 35%; animation-duration: 1s; animation-delay: 0.1s; }
-        .pill:nth-child(5) { left: 45%; animation-duration: 2s; animation-delay: 0.8s; }
-        .pill:nth-child(6) { left: 55%; animation-duration: 2.5s; animation-delay: 0.3s; }
-        .pill:nth-child(7) { left: 65%; animation-duration: 1.5s; animation-delay: 0.7s; }
-        .pill:nth-child(8) { left: 75%; animation-duration: 3s; animation-delay: 0.4s; }
-        .pill:nth-child(9) { left: 85%; animation-duration: 2s; animation-delay: 0.9s; }
-        .pill:nth-child(10) { left: 95%; animation-duration: 2s; animation-delay: 0.2s; }
-        .pill:nth-child(11) { left: 20%; animation-duration: 2.5s; animation-delay: 0.6s; }
-        .pill:nth-child(12) { left: 80%; animation-duration: 1.8s; animation-delay: 0.5s; }
+        .pill:nth-child(1) { left: 5%; animation-duration: 1.2s; }
+        .pill:nth-child(2) { left: 15%; animation-duration: 1.5s; animation-delay: 0.1s; }
+        .pill:nth-child(3) { left: 25%; animation-duration: 1.3s; animation-delay: 0.2s; }
+        .pill:nth-child(4) { left: 35%; animation-duration: 1.6s; animation-delay: 0.05s; }
+        .pill:nth-child(5) { left: 45%; animation-duration: 1.1s; animation-delay: 0.3s; }
+        .pill:nth-child(6) { left: 55%; animation-duration: 1.4s; animation-delay: 0.15s; }
+        .pill:nth-child(7) { left: 65%; animation-duration: 1.2s; animation-delay: 0.25s; }
+        .pill:nth-child(8) { left: 75%; animation-duration: 1.7s; animation-delay: 0.1s; }
+        .pill:nth-child(9) { left: 85%; animation-duration: 1s; animation-delay: 0.4s; }
+        .pill:nth-child(10) { left: 95%; animation-duration: 1.5s; animation-delay: 0.1s; }
         </style>
         """, unsafe_allow_html=True)
+        # Reset the trigger so it's ready for the next click
+        S.fire_pills = False
 
     # ── TUNING & OPTIMIZATION ──
     col_t1, col_t2 = st.columns([1, 1.5])
@@ -846,17 +853,10 @@ elif S.step == 9:
         if st.button("🚀 Run Hyperparameter Tuning"):
             with st.spinner("Engineering Model Sensitivity..."):
                 import time
-                time.sleep(1.5)
-                # Upgrading the Random Forest to be sensitive to Age/BMI
+                time.sleep(1.2)
                 if S.model_name == "Random Forest":
-                    S.model = RandomForestRegressor(
-                        n_estimators=300, 
-                        max_depth=15,       # Deep enough to capture trends
-                        min_samples_leaf=1, # Sensitive to small feature changes
-                        random_state=42
-                    )
+                    S.model = RandomForestRegressor(n_estimators=300, max_depth=15, random_state=42)
                     S.model.fit(S.X_train, S.y_train)
-                
                 S.tuning_done = True
                 st.success("Optimization Complete!")
 
@@ -864,7 +864,6 @@ elif S.step == 9:
     if S.trained:
         st.markdown("---")
         st.markdown("#### 🔮 Live Premium Predictor")
-        st.write("Input patient details to see real-time price adjustments.")
         
         c1, c2, c3 = st.columns(3)
         with c1:
@@ -875,29 +874,30 @@ elif S.step == 9:
             in_children = st.number_input("Dependents", 0, 10, 0)
         with c3:
             in_sex = st.selectbox("Sex", ["Male", "Female"])
-            st.caption(f"Targeting: {S.target}")
 
-        # Prep prediction data
-        input_dict = {
-            'age': in_age,
-            'sex': 1 if in_sex == "Male" else 0,
-            'bmi': in_bmi,
-            'children': in_children,
-            'smoker': 1 if in_smoker == "Yes" else 0
-        }
-        
-        # Filter for only selected features from Step 4
+        input_dict = {'age': in_age, 'sex': 1 if in_sex == "Male" else 0, 'bmi': in_bmi, 'children': in_children, 'smoker': 1 if in_smoker == "Yes" else 0}
         input_df = pd.DataFrame([input_dict])[S.selected_features]
 
         if st.button("💰 Calculate Insurance Charges"):
+            # 1. Trigger the medicine rain
+            S.fire_pills = True
+            
+            # 2. Get prediction
             prediction = S.model.predict(input_df)[0]
             
-            # Premium Results Card
+            # 3. Show Success Banner
+            st.markdown("""
+            <div style="background: rgba(0,212,170,0.2); border-radius: 10px; padding: 15px; text-align: center; border: 1px solid var(--accent2); margin-bottom: 20px;">
+                <h4 style="margin:0; color: var(--accent2); font-family: 'Space Mono';">✅ ML PIPELINE COMPLETED SUCCESSFULLY</h4>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # 4. Show Prediction Card
             st.markdown(f"""
             <div style="background: linear-gradient(135deg, rgba(0,212,170,0.1), rgba(108,99,255,0.1)); 
                         border: 2px solid var(--accent2); padding: 30px; border-radius: 20px; 
-                        text-align: center; margin: 20px 0; box-shadow: var(--glow2);">
-                <p style="margin: 0; color: var(--muted); font-family: 'Space Mono'; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px;">Estimated Annual Charges</p>
+                        text-align: center; box-shadow: var(--glow2);">
+                <p style="margin: 0; color: var(--muted); font-family: 'Space Mono'; font-size: 0.8rem; text-transform: uppercase;">Estimated Annual Charges</p>
                 <h1 style="margin: 15px 0; color: #fff; font-family: 'Space Mono'; font-size: 3.2rem;">${prediction:,.2f}</h1>
                 <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
                     <span class="tag tag-green">AGE: {in_age}</span>
@@ -906,6 +906,9 @@ elif S.step == 9:
                 </div>
             </div>
             """, unsafe_allow_html=True)
+            
+            # Rerun once to process the fire_pills state change
+            st.rerun()
 
     # ── FOOTER ACTIONS ──
     if S.tuning_done:

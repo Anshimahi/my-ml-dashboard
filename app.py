@@ -874,120 +874,79 @@ elif S.step == 8:
 elif S.step == 9:
     section("STEP 10", "⚙️ Tuning & Live Prediction")
     
-    # Initialize variables in session state if they don't exist
-    if "fire_pills" not in S: S.fire_pills = False
-    if "last_prediction" not in S: S.last_prediction = None
-
-    # ── THEMATIC MEDICINE RAIN ──
+    # Medicine Rain Trigger
     if S.fire_pills:
-        st.markdown("""
-        <div class="med-container">
-            <div class="pill">💊</div><div class="pill">🧪</div><div class="pill">🩺</div>
-            <div class="pill">💉</div><div class="pill">💊</div><div class="pill">🩹</div>
-            <div class="pill">💊</div><div class="pill">🩺</div><div class="pill">🧪</div>
-            <div class="pill">🩹</div><div class="pill">💊</div><div class="pill">💉</div>
-        </div>
-        <style>
-        .med-container {
-            position: fixed;
-            top: -50px; left: 0; width: 100%; height: 100%;
-            pointer-events: none; z-index: 9999;
-        }
-        .pill {
-            position: absolute;
-            font-size: 2rem;
-            animation: fall linear 1 forwards; 
-            filter: drop-shadow(0 0 8px rgba(0,212,170,0.6));
-            opacity: 0;
-        }
-        @keyframes fall {
-            0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
-        }
-        .pill:nth-child(1) { left: 5%; animation-duration: 1.2s; }
-        .pill:nth-child(2) { left: 15%; animation-duration: 1.5s; animation-delay: 0.1s; }
-        .pill:nth-child(3) { left: 25%; animation-duration: 1.3s; animation-delay: 0.2s; }
-        .pill:nth-child(4) { left: 35%; animation-duration: 1.6s; }
-        .pill:nth-child(5) { left: 45%; animation-duration: 1.1s; animation-delay: 0.3s; }
-        .pill:nth-child(6) { left: 55%; animation-duration: 1.4s; }
-        .pill:nth-child(7) { left: 65%; animation-duration: 1.2s; animation-delay: 0.2s; }
-        .pill:nth-child(8) { left: 75%; animation-duration: 1.7s; }
-        .pill:nth-child(9) { left: 85%; animation-duration: 1s; animation-delay: 0.4s; }
-        .pill:nth-child(10) { left: 95%; animation-duration: 1.5s; }
-        </style>
-        """, unsafe_allow_html=True)
-        S.fire_pills = False # Reset for next time
+        st.markdown('<div class="med-container">' + ''.join([f'<div class="pill" style="left:{x}%; animation-duration:1s;">💊</div>' for x in range(5,95,10)]) + '</div>', unsafe_allow_html=True)
+        S.fire_pills = False
+    
+    # 1. UNIVERSAL TUNING
+    if st.button("🚀 Optimize Model for Current Dataset", use_container_width=True):
+        with st.spinner("Tuning hyperparameters..."):
+            if S.model_name == "Random Forest":
+                if S.problem_type == "Regression":
+                    S.model = RandomForestRegressor(n_estimators=200, max_depth=10, random_state=42)
+                else:
+                    S.model = RandomForestClassifier(n_estimators=200, max_depth=10, random_state=42)
+            S.model.fit(S.X_train, S.y_train)
+            S.tuning_done = True
+            st.success(f"Model optimized for {len(S.selected_features)} features!")
 
-    # ── TUNING & OPTIMIZATION ──
-    col_t1, col_t2 = st.columns([1, 1.5])
-    with col_t1:
-        st.markdown("#### ⚡ Optimization")
-        if st.button("🚀 Run Hyperparameter Tuning"):
-            with st.spinner("Engineering Model Sensitivity..."):
-                import time
-                time.sleep(1.2)
-                if S.model_name == "Random Forest":
-                    S.model = RandomForestRegressor(n_estimators=300, max_depth=15, random_state=42)
-                    S.model.fit(S.X_train, S.y_train)
-                S.tuning_done = True
-                st.success("Optimization Complete!")
-
-    # ── LIVE PREDICTOR ──
+    st.markdown("---")
+    
+    # 2. DYNAMIC INPUT GENERATOR (This makes it work for ANY data)
     if S.trained:
-        st.markdown("---")
-        st.markdown("#### 🔮 Live Premium Predictor")
+        st.markdown("#### 🔮 Dynamic Input Predictor")
+        st.write("Enter values for the selected features to get a prediction.")
         
-        c1, c2, c3 = st.columns(3)
-        with c1:
-            in_age = st.slider("Age", 18, 100, 25)
-            in_smoker = st.radio("Smoker?", ["No", "Yes"], horizontal=True)
-        with c2:
-            in_bmi = st.slider("BMI", 10.0, 55.0, 24.5, 0.1)
-            in_children = st.number_input("Dependents", 0, 10, 0)
-        with c3:
-            in_sex = st.selectbox("Sex", ["Male", "Female"])
+        # We create a dictionary to store user inputs
+        user_inputs = {}
+        
+        # Arrange inputs in 3 columns automatically
+        cols = st.columns(3)
+        for i, col_name in enumerate(S.selected_features):
+            with cols[i % 3]:
+                # Determine if the column is Numeric or Categorical
+                # Based on the original raw data
+                if S.raw_df[col_name].dtype in [np.float64, np.int64]:
+                    min_val = float(S.raw_df[col_name].min())
+                    max_val = float(S.raw_df[col_name].max())
+                    mean_val = float(S.raw_df[col_name].mean())
+                    user_inputs[col_name] = st.slider(f"{col_name}", min_val, max_val, mean_val)
+                else:
+                    # Categorical: use the labels from the encoder we saved earlier
+                    options = list(S.encoders[col_name].classes_)
+                    val = st.selectbox(f"{col_name}", options)
+                    # Convert back to the encoded number for the model
+                    user_inputs[col_name] = S.encoders[col_name].transform([val])[0]
 
-        input_dict = {'age': in_age, 'sex': 1 if in_sex == "Male" else 0, 'bmi': in_bmi, 'children': in_children, 'smoker': 1 if in_smoker == "Yes" else 0}
-        input_df = pd.DataFrame([input_dict])[S.selected_features]
-
-        if st.button("💰 Calculate Insurance Charges"):
-            S.last_prediction = S.model.predict(input_df)[0]
+        # 3. UNIVERSAL PREDICTION
+        if st.button(f"💰 Predict {S.target}", use_container_width=True):
+            # Create DataFrame in the exact order the model expects
+            input_df = pd.DataFrame([user_inputs])[S.selected_features]
+            
+            # Predict
+            res = S.model.predict(input_df)[0]
+            S.last_prediction = res
             S.fire_pills = True
             st.rerun()
 
-        # Display the result if it exists in session state
         if S.last_prediction is not None:
-            st.markdown("""
-            <div style="background: rgba(0,212,170,0.2); border-radius: 10px; padding: 15px; text-align: center; border: 1px solid var(--accent2); margin-bottom: 20px;">
-                <h4 style="margin:0; color: var(--accent2); font-family: 'Space Mono';">✅ ML PIPELINE COMPLETED SUCCESSFULLY</h4>
-            </div>
-            """, unsafe_allow_html=True)
-
+            st.success(f"✅ Prediction for {S.target} Complete")
             st.markdown(f"""
-            <div style="background: linear-gradient(135deg, rgba(0,212,170,0.1), rgba(108,99,255,0.1)); 
-                        border: 2px solid var(--accent2); padding: 30px; border-radius: 20px; 
-                        text-align: center; box-shadow: var(--glow2);">
-                <p style="margin: 0; color: var(--muted); font-family: 'Space Mono'; font-size: 0.8rem; text-transform: uppercase;">Estimated Annual Charges</p>
-                <h1 style="margin: 15px 0; color: #fff; font-family: 'Space Mono'; font-size: 3.2rem;">${S.last_prediction:,.2f}</h1>
-                <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
-                    <span class="tag tag-green">AGE: {in_age}</span>
-                    <span class="tag tag-yellow">BMI: {in_bmi}</span>
-                    <span class="tag {'tag-red' if in_smoker == 'Yes' else 'tag-green'}">SMOKER: {in_smoker}</span>
+                <div class="metric-card" style="border:2px solid var(--accent2); padding:30px;">
+                    <div class="metric-lbl">PREDICTED {S.target.upper()}</div>
+                    <div class="metric-val" style="font-size:3rem; color:#fff">{S.last_prediction:,.2f}</div>
                 </div>
-            </div>
             """, unsafe_allow_html=True)
 
-    # ── FOOTER ACTIONS ──
-    if S.tuning_done:
-        st.markdown("<br>", unsafe_allow_html=True)
+    # FOOTER
+    st.markdown("---")
+    fl, fr = st.columns([1,1])
+    with fl: st.button("← Back", on_click=prev_step_fn, use_container_width=True)
+    with fr: 
         if st.button("Restart Pipeline 🔄", use_container_width=True):
             for k in DEFAULTS: S[k] = DEFAULTS[k]
-            S.last_prediction = None # Clear prediction on restart
             st.rerun()
-
-    st.button("← Back", on_click=prev_step_fn)
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 #  PREMIUM FOOTER
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

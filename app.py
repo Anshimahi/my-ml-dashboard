@@ -350,6 +350,10 @@ def apply_theme(fig):
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 #  SESSION STATE INIT
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ONLY SHOWING FIXED PART (STEP 9 + DEFAULTS)
+# Rest of your code remains SAME
+
+# ───────── DEFAULTS FIX ─────────
 DEFAULTS = dict(
     step=0,
     raw_df=None, df=None, target=None, feature_cols=None,
@@ -363,8 +367,9 @@ DEFAULTS = dict(
     y_pred=None, y_pred_train=None,
     tuning_done=False, best_params=None,
 
-    # ✅ ADD THESE
-    fire_pills=False,
+    # ✅ ADD THIS LINE
+    problem_type="Classification",
+
     last_prediction=None
 )
 for k, v in DEFAULTS.items():
@@ -906,13 +911,8 @@ elif S.step == 8:
     # 2. DYNAMIC INPUT GENERATOR (This makes it work for ANY data)
 elif S.step == 9:
     section("STEP 10", "⚙️ Tuning & Universal Prediction")
-    
-    # ── THEMATIC ANIMATION ──
-    if S.fire_pills:
-        st.markdown('<div class="med-container">' + ''.join([f'<div class="pill" style="left:{x}%; animation-duration:1s;">✨</div>' for x in range(5,95,10)]) + '</div>', unsafe_allow_html=True)
-        S.fire_pills = False
-    
-    # ── 1. UNIVERSAL MODEL OPTIMIZATION ──
+
+    # ── MODEL OPTIMIZATION ──
     if st.button(f"🚀 Optimize {S.model_name} for {S.target}", use_container_width=True):
         with st.spinner("Fine-tuning model architecture..."):
             if S.model_name == "Random Forest":
@@ -924,39 +924,68 @@ elif S.step == 9:
             if S.X_train is not None:
                 S.model.fit(S.X_train, S.y_train)
                 S.tuning_done = True
-                st.success(f"Model optimized for {S.problem_type} task!")
+                st.success("✅ Model optimized successfully!")
 
     st.markdown("---")
-    
-    # ── 2. DYNAMIC INPUT GENERATOR ──
-    if S.trained:
+
+    # ── LIVE PREDICTOR ──
+    if S.model is not None:
         st.markdown(f"#### 🔮 Live Predictor: {S.target}")
         
         user_inputs = {}
         cols = st.columns(3)
-        
+
         for i, col_name in enumerate(S.selected_features):
             with cols[i % 3]:
+
                 if pd.api.types.is_numeric_dtype(S.raw_df[col_name]):
-                    m_val = float(S.raw_df[col_name].min())
-                    mx_val = float(S.raw_df[col_name].max())
-                    avg_val = float(S.raw_df[col_name].mean())
-                    user_inputs[col_name] = st.slider(f"{col_name}", m_val, mx_val, avg_val, key=f"input_{col_name}")
+
+                    # ✅ INTEGER FIX
+                    if pd.api.types.is_integer_dtype(S.raw_df[col_name]):
+                        m_val = int(S.raw_df[col_name].min())
+                        mx_val = int(S.raw_df[col_name].max())
+                        avg_val = int(S.raw_df[col_name].mean())
+
+                        user_inputs[col_name] = st.slider(
+                            f"{col_name}",
+                            m_val,
+                            mx_val,
+                            avg_val,
+                            step=1,
+                            key=f"input_{col_name}"
+                        )
+
+                    else:
+                        m_val = float(S.raw_df[col_name].min())
+                        mx_val = float(S.raw_df[col_name].max())
+                        avg_val = float(S.raw_df[col_name].mean())
+
+                        user_inputs[col_name] = st.slider(
+                            f"{col_name}",
+                            m_val,
+                            mx_val,
+                            avg_val,
+                            key=f"input_{col_name}"
+                        )
+
                 else:
                     if col_name in S.encoders:
                         opts = list(S.encoders[col_name].classes_)
                         val = st.selectbox(f"{col_name}", opts, key=f"input_{col_name}")
                         user_inputs[col_name] = S.encoders[col_name].transform([val])[0]
 
-        # ── 3. PREDICTION LOGIC ──
-        if st.button(f"📊 Generate Prediction", use_container_width=True):
+        # ── PREDICTION BUTTON (FIXED) ──
+        if st.button("📊 Generate Prediction", use_container_width=True):
             input_df = pd.DataFrame([user_inputs])[S.selected_features]
             res = S.model.predict(input_df)[0]
             S.last_prediction = res
-            S.fire_pills = True
-            st.rerun()
 
-        # ── 4. RESULTS DISPLAY ──
+            # 🎉 SHOW ONLY FIRST TIME
+            if "completed_shown" not in S:
+                S.completed_shown = True
+                st.success("🎉 Pipeline Completed Successfully!")
+
+        # ── RESULT DISPLAY ──
         if S.last_prediction is not None:
             if S.problem_type == "Classification":
                 display_val = S.last_prediction
@@ -973,18 +1002,18 @@ elif S.step == 9:
                     <div class="metric-val" style="font-size:3rem; color:#fff">{display_val}</div>
                 </div>""", unsafe_allow_html=True)
 
-    # ── 5. FOOTER (FIXED NAMES) ──
+    # ── FOOTER ──
     st.markdown("<br>", unsafe_allow_html=True)
     fl, fr = st.columns([1,1])
+
     with fl: 
-        # Using next_step / prev_step to match your helper function names
         st.button("← Back", on_click=prev_step_fn, use_container_width=True)
+
     with fr: 
         if st.button("Restart Pipeline 🔄", use_container_width=True):
-            S.last_prediction = None
-            for k in DEFAULTS: S[k] = DEFAULTS[k]
+            for k in DEFAULTS:
+                S[k] = DEFAULTS[k]
             st.rerun()
-    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 #  PREMIUM FOOTER
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 st.markdown("---")
@@ -1024,4 +1053,3 @@ st.markdown("""
         
     </div>
 """, unsafe_allow_html=True)
-

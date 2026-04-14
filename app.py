@@ -387,27 +387,38 @@ STEPS = [
 #  HERO + PIPELINE BAR
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 st.markdown("""
+
 <div class="hero">
-  <p class="hero-title">🧬 ML Pipeline Studio</p>
-  <p class="hero-sub">Interactive machine learning design by Anshika & Anjil</p>
+
+  <p class="hero-title">🧬 ML Pipeline </p>
+
+  <p class="hero-sub">End-to-end machine learning — from raw data to tuned models — in one visual pipeline.</p>
+
 </div>
+
 """, unsafe_allow_html=True)
 
-# Functional Navigation Bar
-nav_cols = st.columns(len(STEPS))
-for i, (icon, label) in enumerate(STEPS):
-    with nav_cols[i]:
-        # Style active step differently via key/logic if desired
-        if st.button(f"{icon}\n{label}", key=f"nav_btn_{i}", use_container_width=True):
-            S.step = i
-            st.rerun()
 
-def section(badge, title):
-    st.markdown(f"""
-    <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
-      <span style="background:var(--accent1); color:#fff; padding:2px 10px; border-radius:20px; font-family:var(--mono); font-size:0.7rem;">{badge}</span>
-      <p style="font-family:var(--mono); font-size:1.1rem; font-weight:700; color:#fff; margin:0;">{title}</p>
-    </div>""", unsafe_allow_html=True)
+
+# Build pipeline bar HTML
+
+bar_html = '<div class="pipeline-bar">'
+
+for i, (icon, label) in enumerate(STEPS):
+
+    cls = "done" if i < S.step else ("active" if i == S.step else "")
+
+    bar_html += f'<div class="step-pill {cls}"><span class="step-icon">{icon}</span>{label}</div>'
+
+    if i < len(STEPS)-1:
+
+        conn_cls = "done" if i < S.step else ""
+
+        bar_html += f'<div class="step-connector {conn_cls}"></div>'
+
+bar_html += '</div>'
+
+st.markdown(bar_html, unsafe_allow_html=True)
 
 def next_step_fn(): S.step += 1
 def prev_step_fn(): S.step -= 1

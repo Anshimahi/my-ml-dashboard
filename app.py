@@ -920,57 +920,103 @@ elif S.step == 9:
     st.markdown("---")
     
     # 2. DYNAMIC INPUT GENERATOR (This makes it work for ANY data)
+   elif S.step == 9:
+    section("STEP 10", "⚙️ Tuning & Universal Prediction")
+    
+    # ── THEMATIC ANIMATION ──
+    if S.fire_pills:
+        # Generalized "Particles" - you can change emojis based on the dataset if desired
+        st.markdown('<div class="med-container">' + ''.join([f'<div class="pill" style="left:{x}%; animation-duration:1s;">✨</div>' for x in range(5,95,10)]) + '</div>', unsafe_allow_html=True)
+        S.fire_pills = False
+    
+    # ── 1. UNIVERSAL MODEL OPTIMIZATION ──
+    if st.button(f"🚀 Optimize {S.model_name} for {S.target}", use_container_width=True):
+        with st.spinner("Fine-tuning model architecture..."):
+            # This handles both Classifier and Regressor tuning dynamically
+            if S.model_name == "Random Forest":
+                if S.problem_type == "Regression":
+                    S.model = RandomForestRegressor(n_estimators=200, max_depth=10, random_state=42)
+                else:
+                    S.model = RandomForestClassifier(n_estimators=200, max_depth=10, random_state=42)
+            
+            # Re-fit the model on the training data with new parameters
+            S.model.fit(S.X_train, S.y_train)
+            S.tuning_done = True
+            st.success(f"Model successfully optimized for {S.problem_type} task!")
+
+    st.markdown("---")
+    
+    # ── 2. DYNAMIC INPUT GENERATOR ──
     if S.trained:
-        st.markdown("#### 🔮 Dynamic Input Predictor")
-        st.write("Enter values for the selected features to get a prediction.")
+        st.markdown(f"#### 🔮 Live Predictor: {S.target}")
+        st.write(f"Adjust inputs to see how the model predicts **{S.target}**.")
         
-        # We create a dictionary to store user inputs
         user_inputs = {}
-        
-        # Arrange inputs in 3 columns automatically
         cols = st.columns(3)
+        
+        # Build the form based on whatever features were selected in Step 4
         for i, col_name in enumerate(S.selected_features):
             with cols[i % 3]:
-                # Determine if the column is Numeric or Categorical
-                # Based on the original raw data
+                # Dynamic Logic: Check data types from the raw dataframe
                 if S.raw_df[col_name].dtype in [np.float64, np.int64]:
+                    # Create a slider for numeric data
                     min_val = float(S.raw_df[col_name].min())
                     max_val = float(S.raw_df[col_name].max())
                     mean_val = float(S.raw_df[col_name].mean())
                     user_inputs[col_name] = st.slider(f"{col_name}", min_val, max_val, mean_val)
                 else:
-                    # Categorical: use the labels from the encoder we saved earlier
-                    options = list(S.encoders[col_name].classes_)
-                    val = st.selectbox(f"{col_name}", options)
-                    # Convert back to the encoded number for the model
-                    user_inputs[col_name] = S.encoders[col_name].transform([val])[0]
+                    # Create a dropdown for categorical data using stored encoders
+                    if col_name in S.encoders:
+                        options = list(S.encoders[col_name].classes_)
+                        val = st.selectbox(f"{col_name}", options)
+                        user_inputs[col_name] = S.encoders[col_name].transform([val])[0]
+                    else:
+                        st.error(f"Missing encoder for {col_name}")
 
-        # 3. UNIVERSAL PREDICTION
-        if st.button(f"💰 Predict {S.target}", use_container_width=True):
-            # Create DataFrame in the exact order the model expects
+        # ── 3. GENERALIZED PREDICTION LOGIC ──
+        if st.button(f"📊 Generate Prediction", use_container_width=True):
+            # 🚨 FIX: Strict column ordering to prevent "Feature Names Mismatch"
             input_df = pd.DataFrame([user_inputs])[S.selected_features]
             
-            # Predict
+            # Predict result
             res = S.model.predict(input_df)[0]
             S.last_prediction = res
             S.fire_pills = True
             st.rerun()
 
+        # ── 4. DYNAMIC RESULTS DISPLAY ──
         if S.last_prediction is not None:
-            st.success(f"✅ Prediction for {S.target} Complete")
+            # Check if we should display as a category or a formatted number
+            if S.problem_type == "Classification":
+                # If it's the target column was encoded, try to decode it back to text
+                display_val = S.last_prediction
+                if S.target in S.encoders:
+                    display_val = S.encoders[S.target].inverse_transform([int(S.last_prediction)])[0]
+                
+                color = "var(--accent1)" # Purple for classification
+            else:
+                # Format as a rounded number or currency for regression
+                display_val = f"{S.last_prediction:,.2f}"
+                color = "var(--accent2)" # Teal for regression
+
             st.markdown(f"""
-                <div class="metric-card" style="border:2px solid var(--accent2); padding:30px;">
+                <div class="metric-card" style="border:2px solid {color}; padding:30px;">
                     <div class="metric-lbl">PREDICTED {S.target.upper()}</div>
-                    <div class="metric-val" style="font-size:3rem; color:#fff">{S.last_prediction:,.2f}</div>
+                    <div class="metric-val" style="font-size:3rem; color:#fff">{display_val}</div>
+                    <div style="font-size:0.7rem; color:var(--muted); margin-top:10px;">
+                        Based on {len(S.selected_features)} processed features
+                    </div>
                 </div>
             """, unsafe_allow_html=True)
 
-    # FOOTER
-    st.markdown("---")
+    # ── 5. GENERALIZED FOOTER ──
+    st.markdown("<br>", unsafe_allow_html=True)
     fl, fr = st.columns([1,1])
-    with fl: st.button("← Back", on_click=prev_step_fn, use_container_width=True)
+    with fl: 
+        st.button("← Back", on_click=prev_step_fn, use_container_width=True)
     with fr: 
         if st.button("Restart Pipeline 🔄", use_container_width=True):
+            # Clear all session state back to defaults
             for k in DEFAULTS: S[k] = DEFAULTS[k]
             st.rerun()
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

@@ -824,17 +824,17 @@ elif S.step == 9:
             100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
         }
         .pill:nth-child(1) { left: 5%; animation-duration: 2s; }
-        .pill:nth-child(2) { left: 15%; animation-duration: 5s; animation-delay: 0.2s; }
-        .pill:nth-child(3) { left: 25%; animation-duration: 4.5s; animation-delay: 0.5s; }
-        .pill:nth-child(4) { left: 35%; animation-duration: 6s; animation-delay: 0.1s; }
-        .pill:nth-child(5) { left: 45%; animation-duration: 4s; animation-delay: 0.8s; }
-        .pill:nth-child(6) { left: 55%; animation-duration: 5.5s; animation-delay: 0.3s; }
-        .pill:nth-child(7) { left: 65%; animation-duration: 4.5s; animation-delay: 0.7s; }
-        .pill:nth-child(8) { left: 75%; animation-duration: 6s; animation-delay: 0.4s; }
-        .pill:nth-child(9) { left: 85%; animation-duration: 4s; animation-delay: 0.9s; }
-        .pill:nth-child(10) { left: 95%; animation-duration: 5s; animation-delay: 0.2s; }
-        .pill:nth-child(11) { left: 20%; animation-duration: 5.5s; animation-delay: 0.6s; }
-        .pill:nth-child(12) { left: 80%; animation-duration: 4.8s; animation-delay: 0.5s; }
+        .pill:nth-child(2) { left: 15%; animation-duration: 2s; animation-delay: 0.2s; }
+        .pill:nth-child(3) { left: 25%; animation-duration: 2.5s; animation-delay: 0.5s; }
+        .pill:nth-child(4) { left: 35%; animation-duration: 1s; animation-delay: 0.1s; }
+        .pill:nth-child(5) { left: 45%; animation-duration: 2s; animation-delay: 0.8s; }
+        .pill:nth-child(6) { left: 55%; animation-duration: 2.5s; animation-delay: 0.3s; }
+        .pill:nth-child(7) { left: 65%; animation-duration: 1.5s; animation-delay: 0.7s; }
+        .pill:nth-child(8) { left: 75%; animation-duration: 3s; animation-delay: 0.4s; }
+        .pill:nth-child(9) { left: 85%; animation-duration: 2s; animation-delay: 0.9s; }
+        .pill:nth-child(10) { left: 95%; animation-duration: 2s; animation-delay: 0.2s; }
+        .pill:nth-child(11) { left: 20%; animation-duration: 2.5s; animation-delay: 0.6s; }
+        .pill:nth-child(12) { left: 80%; animation-duration: 1.8s; animation-delay: 0.5s; }
         </style>
         """, unsafe_allow_html=True)
 

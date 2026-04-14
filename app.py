@@ -795,14 +795,17 @@ elif S.step == 8:
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 #  STEP 9 — TUNING & LIVE PREDICTION (Final Interactive Version)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  STEP 9 — TUNING & LIVE PREDICTION (Fixed Prediction Display)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 elif S.step == 9:
     section("STEP 10", "⚙️ Tuning & Live Prediction")
     
-    # Initialize a trigger for the medicine rain if not present
-    if "fire_pills" not in S:
-        S.fire_pills = False
+    # Initialize variables in session state if they don't exist
+    if "fire_pills" not in S: S.fire_pills = False
+    if "last_prediction" not in S: S.last_prediction = None
 
-    # ── THEMATIC MEDICINE RAIN (Triggered on Predict) ──
+    # ── THEMATIC MEDICINE RAIN ──
     if S.fire_pills:
         st.markdown("""
         <div class="med-container">
@@ -833,21 +836,19 @@ elif S.step == 9:
         .pill:nth-child(1) { left: 5%; animation-duration: 1.2s; }
         .pill:nth-child(2) { left: 15%; animation-duration: 1.5s; animation-delay: 0.1s; }
         .pill:nth-child(3) { left: 25%; animation-duration: 1.3s; animation-delay: 0.2s; }
-        .pill:nth-child(4) { left: 35%; animation-duration: 1.6s; animation-delay: 0.05s; }
+        .pill:nth-child(4) { left: 35%; animation-duration: 1.6s; }
         .pill:nth-child(5) { left: 45%; animation-duration: 1.1s; animation-delay: 0.3s; }
-        .pill:nth-child(6) { left: 55%; animation-duration: 1.4s; animation-delay: 0.15s; }
-        .pill:nth-child(7) { left: 65%; animation-duration: 1.2s; animation-delay: 0.25s; }
-        .pill:nth-child(8) { left: 75%; animation-duration: 1.7s; animation-delay: 0.1s; }
+        .pill:nth-child(6) { left: 55%; animation-duration: 1.4s; }
+        .pill:nth-child(7) { left: 65%; animation-duration: 1.2s; animation-delay: 0.2s; }
+        .pill:nth-child(8) { left: 75%; animation-duration: 1.7s; }
         .pill:nth-child(9) { left: 85%; animation-duration: 1s; animation-delay: 0.4s; }
-        .pill:nth-child(10) { left: 95%; animation-duration: 1.5s; animation-delay: 0.1s; }
+        .pill:nth-child(10) { left: 95%; animation-duration: 1.5s; }
         </style>
         """, unsafe_allow_html=True)
-        # Reset the trigger so it's ready for the next click
-        S.fire_pills = False
+        S.fire_pills = False # Reset for next time
 
     # ── TUNING & OPTIMIZATION ──
     col_t1, col_t2 = st.columns([1, 1.5])
-    
     with col_t1:
         st.markdown("#### ⚡ Optimization")
         if st.button("🚀 Run Hyperparameter Tuning"):
@@ -879,26 +880,24 @@ elif S.step == 9:
         input_df = pd.DataFrame([input_dict])[S.selected_features]
 
         if st.button("💰 Calculate Insurance Charges"):
-            # 1. Trigger the medicine rain
+            S.last_prediction = S.model.predict(input_df)[0]
             S.fire_pills = True
-            
-            # 2. Get prediction
-            prediction = S.model.predict(input_df)[0]
-            
-            # 3. Show Success Banner
+            st.rerun()
+
+        # Display the result if it exists in session state
+        if S.last_prediction is not None:
             st.markdown("""
             <div style="background: rgba(0,212,170,0.2); border-radius: 10px; padding: 15px; text-align: center; border: 1px solid var(--accent2); margin-bottom: 20px;">
                 <h4 style="margin:0; color: var(--accent2); font-family: 'Space Mono';">✅ ML PIPELINE COMPLETED SUCCESSFULLY</h4>
             </div>
             """, unsafe_allow_html=True)
 
-            # 4. Show Prediction Card
             st.markdown(f"""
             <div style="background: linear-gradient(135deg, rgba(0,212,170,0.1), rgba(108,99,255,0.1)); 
                         border: 2px solid var(--accent2); padding: 30px; border-radius: 20px; 
                         text-align: center; box-shadow: var(--glow2);">
                 <p style="margin: 0; color: var(--muted); font-family: 'Space Mono'; font-size: 0.8rem; text-transform: uppercase;">Estimated Annual Charges</p>
-                <h1 style="margin: 15px 0; color: #fff; font-family: 'Space Mono'; font-size: 3.2rem;">${prediction:,.2f}</h1>
+                <h1 style="margin: 15px 0; color: #fff; font-family: 'Space Mono'; font-size: 3.2rem;">${S.last_prediction:,.2f}</h1>
                 <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
                     <span class="tag tag-green">AGE: {in_age}</span>
                     <span class="tag tag-yellow">BMI: {in_bmi}</span>
@@ -906,15 +905,13 @@ elif S.step == 9:
                 </div>
             </div>
             """, unsafe_allow_html=True)
-            
-            # Rerun once to process the fire_pills state change
-            st.rerun()
 
     # ── FOOTER ACTIONS ──
     if S.tuning_done:
         st.markdown("<br>", unsafe_allow_html=True)
         if st.button("Restart Pipeline 🔄", use_container_width=True):
             for k in DEFAULTS: S[k] = DEFAULTS[k]
+            S.last_prediction = None # Clear prediction on restart
             st.rerun()
 
     st.button("← Back", on_click=prev_step_fn)

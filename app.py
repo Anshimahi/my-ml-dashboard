@@ -351,7 +351,7 @@ def apply_theme(fig):
 #  SESSION STATE INIT
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DEFAULTS = dict(
-    step=0, problem_type=None,
+    step=0,"fire_pills": False,  # Add this here! problem_type=None,
     raw_df=None, df=None, target=None, feature_cols=None,
     encoders={}, scaler=None,
     outlier_indices=[], remove_outliers=False,
